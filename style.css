@@ -1,0 +1,58 @@
+span.css-10trblm.eqr7zpz0{
+    margin-top: -200px;
+    /* margin-left: -300px; */
+    margin-left: 200px;
+    color: #5bcae9;
+    letter-spacing: 5px;
+    font-size: 64px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    font-weight: bold;
+}
+
+
+.first {
+    color: #e79620;
+    font-size: 24px;
+    font-weight: 600;
+    position: absolute;
+    padding-top: 20px;
+}
+
+.second {
+    color: #e79620;
+    font-size: 24px;
+    font-weight: 600;
+    position: absolute;
+    padding-top: 20px;
+}
+
+.third {
+    color: #e79620;
+    font-size: 24px;
+    font-weight: 600;
+    position: absolute;
+    padding-top: 20px;
+}
+
+.ruleset{
+    color: #5bcae9;
+    font-size: 36px;
+    font-weight: 300;
+    position: absolute;
+    padding-top: 20px;
+    padding-left: 150px;
+}
+
+.form_head{
+    color: #e79620;
+    font-size: 24px;
+    font-weight: 300;
+}
+
+.form_small{
+    font-size: 16px;
+    font-weight: 10;
+    padding-left: 80px;
+}
