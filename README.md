@@ -1,4 +1,11 @@
-## Running the Streamlit Web App
+## General Dependencies
+    ```bash
+    pip install networkx
+    pip install pennylane
+    pip install pandas
+    pip install numpy
+    
+    ```
 
 1. First, make sure to install Streamlit by running the following command in your terminal:
 
