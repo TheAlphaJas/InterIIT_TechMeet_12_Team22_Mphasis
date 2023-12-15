@@ -5,7 +5,7 @@ from io import StringIO
 from graph_builder import graph_builder
 from bbx import bbx
 from qaoa_optimizer import draw_graph
-
+from pnr_sorting import list_of_pnrs
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -17,18 +17,18 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True) 
 
-st.title('Inter IIT Tech Meet 12: Quantum C.')
+st.title('Inter IIT Tech Meet 12: Quantum Computing')
 
 #File upload 
-st.markdown("<p class='first'>Upload the Flight Schedule</p>", unsafe_allow_html=True)
-uploaded_file = st.file_uploader(" ",type='csv')
-if uploaded_file is not None:
+st.markdown("<p class='first'>Upload the Inventory File</p>", unsafe_allow_html=True)
+uploaded_file1 = st.file_uploader(" ",type='csv')
+if uploaded_file1 is not None:
     # To read file as bytes:
-    bytes_data = uploaded_file.getvalue()
+    bytes_data = uploaded_file1.getvalue()
     # st.write(bytes_data)
 
     # To convert to a string based IO:
-    stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+    stringio = StringIO(uploaded_file1.getvalue().decode("utf-8"))
     # st.write(stringio)
 
     # To read file as string:
@@ -36,37 +36,37 @@ if uploaded_file is not None:
     # st.write(string_data)
 
     # Can be used wherever a "file-like" object is accepted:
-    FlightSchedule = pd.read_csv(uploaded_file)
+    FlightSchedule = pd.read_csv(uploaded_file1)
     st.write(FlightSchedule)
 
 # Add padding with Markdown
 st.markdown("<br>", unsafe_allow_html=True)
 
 #File upload 
-st.markdown("<p class='second'>Upload the Cancelled Flights Data</p>", unsafe_allow_html=True)
-uploaded_file = st.file_uploader("",type = 'csv')
-if uploaded_file is not None:
-    # To read file as bytes:
-    bytes_data = uploaded_file.getvalue()
-    # st.write(bytes_data)
+# st.markdown("<p class='second'>Upload the Cancelled Flights Data</p>", unsafe_allow_html=True)
+# uploaded_file = st.file_uploader("",type = 'csv')
+# if uploaded_file is not None:
+#     # To read file as bytes:
+#     bytes_data = uploaded_file.getvalue()
+#     # st.write(bytes_data)
 
-    # To convert to a string based IO:
-    stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-    # st.write(stringio)
+#     # To convert to a string based IO:
+#     stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+#     # st.write(stringio)
 
-    # To read file as string:
-    string_data = stringio.read()
-    # st.write(string_data)
+#     # To read file as string:
+#     string_data = stringio.read()
+#     # st.write(string_data)
 
-    # Can be used wherever a "file-like" object is accepted:
-    CancelledFlights = pd.read_csv(uploaded_file)
-    st.write(CancelledFlights)
+#     # Can be used wherever a "file-like" object is accepted:
+#     CancelledFlights = pd.read_csv(uploaded_file)
+#     st.write(CancelledFlights)
 
 # Add padding with Markdown
-st.markdown("<br>", unsafe_allow_html=True)
+# st.markdown("<br>", unsafe_allow_html=True)
 
 #File upload 
-st.markdown("<p class='third'>Upload the PNR Data</p>", unsafe_allow_html=True)
+st.markdown("<p class='third'>Upload the PNR Booking Data</p>", unsafe_allow_html=True)
 uploaded_file = st.file_uploader("        ",type = 'csv')
 if uploaded_file is not None:
     # To read file as bytes:
@@ -82,9 +82,30 @@ if uploaded_file is not None:
     # st.write(string_data)
 
     # Can be used wherever a "file-like" object is accepted:
-    PNRData = pd.read_csv(uploaded_file)
-    st.write(PNRData)
+    PNRBData = pd.read_csv(uploaded_file)
+    st.write(PNRBData)
 
+st.markdown("<p class='third'>Upload the PNR Passenger Data</p>", unsafe_allow_html=True)
+uploaded_file = st.file_uploader("       ",type = 'csv')
+if uploaded_file is not None:
+    # To read file as bytes:
+    bytes_data = uploaded_file.getvalue()
+    # st.write(bytes_data)
+
+    # To convert to a string based IO:
+    stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+    # st.write(stringio)
+
+    # To read file as string:
+    string_data = stringio.read()
+    # st.write(string_data)
+
+    # Can be used wherever a "file-like" object is accepted:
+    PNRPData = pd.read_csv(uploaded_file)
+    st.write(PNRPData)
+st.markdown("<p class='third'>Cancelled Flights</p>", unsafe_allow_html=True)
+#st.info("HI",icon = "⚠️")
+cancelled_flights = st.text_input("",value = "2,3", help = "Row numbers of cancelled flights from inventory file")
 #### RULESET ####
 st.markdown("---")
 st.markdown("<p class='ruleset'> Customize your Rules Here </p>", unsafe_allow_html=True)
@@ -124,8 +145,10 @@ with st.form("my_form"):
    #Stop over
     st.markdown("<p class='form_head'>Stop over</p>", unsafe_allow_html=True)
     so = st.number_input('Stop over scoring',value = -20.00)
+    whatisthis = st.number_input("Minimum Connecting Time (MCT) in hours", value = 1)
     scoring_list.append(so)
     scoring_list.append(tx1)
+    scoring_list.append(whatisthis)
    # PNR Ranking
    st.markdown("<h3>PNR Ranking Criteria</h3>", unsafe_allow_html=True)
    with st.expander("Detailed PNR Scoring"):
@@ -150,16 +173,29 @@ with st.form("my_form"):
     pnr_scoring_list.extend([ssr_score,first_class_score,business_class_score,premium_economy_score,economy_score,downline_connection_score,booking_type_score,score_per_passenger,presidential_platinum_score,platinum_score,gold_score,silver_score])
    submitted = st.form_submit_button("Submit")
    if submitted:
+        if uploaded_file1 is None:
+           st.warning("No Inventory File Given", icon="⚠️")
+        else:
+            if uploaded_file is None:
+               st.warning("No PNR File Given", icon="⚠️")
+            else:            
         # G = nx.DiGraph()
         # G.add_edge(1,0,weight=4)
         # G.add_edge(1,4,weight=4)
-        G=graph_builder(FlightSchedule,scoring_list,1)
+                cancelled_flights = cancelled_flights.split(",")
+                for i in cancelled_flights:
+                    i = int(i)-2
+                    G,sourcelist,destlist=graph_builder(FlightSchedule,scoring_list,i,cancelled_flights)
+                    lpr = list_of_pnrs(int(list(FlightSchedule['FlightNumber'])[i]),pd.Timestamp(list(FlightSchedule['DepartureDate'])[i]),pnr_scoring_list,PNRBData,PNRPData,pd.Timestamp.now() + pd.Timedelta(hours = int(whatisthis)),pd.Timestamp.now() + pd.Timedelta(hours = 10000))
+                    #print(int(list(FlightSchedule['FlightNumber'])[i]),list(FlightSchedule['DepartureDate'])[i],"list pnr",lpr)
         # G = nx.DiGraph()
         # G.add_edge("hi","yes",weight = 5)
         # G.add_edge("skip","no",weight = 5)
-        print("EDGES ",G.edges(data=True))
+        #print("EDGES ",G.edges(data=True))
         #draw_graph(G)
-        G = bbx(G,2,5)
-        print(G.edges(data=True))
+                    updownmap = {'FirstClass':['FirstClass'],'BusinessClass':['BusinessClass'],'EconomyClass':['EconomyClass'],'PremiumEconomyClass':['PremiumEconomyClass']}
+                    listofpnr = bbx(G,sourcelist[i],destlist[i],lpr,int(whatisthis),updownmap)
+                    print(listofpnr)
+        #print(G.edges(data=True))
         #print(G)
-        st.pyplot(draw_graph(G))
+                #st.pyplot(draw_graph(G))

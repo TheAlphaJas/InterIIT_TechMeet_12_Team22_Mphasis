@@ -4,49 +4,52 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 # Read the dataset
-def graph_builder(FlightSchedule,scoring_list,j):
+def graph_builder(FlightSchedule,scoring_list,j,cancelled_list):
     new_df = FlightSchedule.copy()
-    new_df2 = new_df.drop('DepartureDates',axis=1)
+    # new_df2 = new_df.drop('DepartureDates',axis=1)
 
-    final_df = pd.DataFrame()
-    print(len(FlightSchedule))
+    # final_df = pd.DataFrame()
+    # print(len(FlightSchedule))
 
-    for i in range(len(list(new_df['ScheduleID']))):
-        da = new_df.iloc[i]['DepartureDates'].strip('][').split(',')
-        for j in range(len(da)):
-            temdata = dict(new_df2.iloc[i])
-            temdata['DepartureDates'] = da[j].strip(" ''")
-            temdic = pd.DataFrame(temdata,index=[0])
-            final_df = pd.concat([final_df,temdic])
-    final_df.reset_index(drop=True, inplace=True)
-    new_df3 = final_df
-    new_df3['ArvTime'] = np.NAN
+    # for i in range(len(list(new_df['ScheduleID']))):
+    #     da = new_df.iloc[i]['DepartureDates'].strip('][').split(',')
+    #     for j in range(len(da)):
+    #         temdata = dict(new_df2.iloc[i])
+    #         temdata['DepartureDates'] = da[j].strip(" ''")
+    #         temdic = pd.DataFrame(temdata,index=[0])
+    #         final_df = pd.concat([final_df,temdic])
+    # final_df.reset_index(drop=True, inplace=True)
+    # new_df3 = final_df
+    # new_df3['ArvTime'] = np.NAN
     
-    new_df3['DepTime'] = pd.to_datetime(new_df3['DepartureTime']+ ' '+ new_df3['DepartureDates'])
-    for i in range(len(list(new_df3['ScheduleID']))):
-        if pd.to_datetime(new_df3.iloc[i]['DepartureTime'])>pd.to_datetime(new_df3.iloc[i]['ArrivalTime']):
-            new_df3.at[i,'ArvTime']  = pd.to_datetime(new_df3.iloc[i]['DepartureDates']+' '+new_df3.iloc[i]['ArrivalTime']) + pd.Timedelta(days=1)
-        else:
-            new_df3.at[i,'ArvTime']  = pd.to_datetime(new_df3.iloc[i]['DepartureDates']+' '+new_df3.iloc[i]['ArrivalTime'])
+    # new_df3['DepTime'] = pd.to_datetime(new_df3['DepartureTime']+ ' '+ new_df3['DepartureDates'])
+    # for i in range(len(list(new_df3['ScheduleID']))):
+    #     if pd.to_datetime(new_df3.iloc[i]['DepartureTime'])>pd.to_datetime(new_df3.iloc[i]['ArrivalTime']):
+    #         new_df3.at[i,'ArvTime']  = pd.to_datetime(new_df3.iloc[i]['DepartureDates']+' '+new_df3.iloc[i]['ArrivalTime']) + pd.Timedelta(days=1)
+    #     else:
+    #         new_df3.at[i,'ArvTime']  = pd.to_datetime(new_df3.iloc[i]['DepartureDates']+' '+new_df3.iloc[i]['ArrivalTime'])
+    print(len(new_df))
+    for r in range(len(new_df)):
+        try:
+            new_df.at[r,'ArrivalAirport'] = new_df.iloc[r]['ArrivalAirport'].strip()
+            new_df.at[r,'DepartureAirport'] = new_df.iloc[r]['DepartureAirport'].strip()
+        except:
+            print("KATA ",new_df.iloc[r]['ArrivalAirport'])
     
-    for r in range(len(new_df3)):
-        new_df3.at[r,'ArrivalAirport'] = new_df3.iloc[r]['ArrivalAirport'].strip()
-        new_df3.at[r,'DepartureAirport'] = new_df3.iloc[r]['DepartureAirport'].strip()
-    
-    df = new_df3
+    df = new_df
     for i in range(len(df)):
         if df.iloc[i]['ArrivalAirport'] != df.iloc[j]['ArrivalAirport']:
-            df.at[i,'ArvTime'] = df.at[i,'ArvTime'] + pd.Timedelta(hours=1)
+            df.at[i,'ArrivalDateTime'] = pd.to_datetime(df.at[i,'ArrivalDateTime']) + pd.Timedelta(hours=scoring_list[-1])
     df
-    df.rename(columns={'DepartureAirport':'ORIG_CD','ArrivalAirport':'DEST_CD','ArvTime':'ARR_DTML','DepTime':'DEP_DTML'},inplace=True)
+    df.rename(columns={'DepartureAirport':'ORIG_CD','ArrivalAirport':'DEST_CD','ArrivalDateTime':'ARR_DTML','DepartureDateTime':'DEP_DTML'},inplace=True)
     
-    print(new_df3)
+    # print(new_df)
     
     # Create a directed graph
     G = nx.DiGraph()
     df['ORIG_CD'] = (df['ORIG_CD'] + df['DEP_DTML'].astype(str))
     df['DEST_CD'] = (df['DEST_CD'] +  df['ARR_DTML'].astype(str))
-    print(df[['ORIG_CD','DEST_CD']].head(5))
+    #print(df[['ORIG_CD','DEST_CD']].head(5))
     canc_start = df.loc[j, 'ORIG_CD']
     canc_dep = df.loc[j, 'DEST_CD']
     # Convert 'dept_time' and 'arr_time' to datetime if they are not already
@@ -65,6 +68,7 @@ def graph_builder(FlightSchedule,scoring_list,j):
         return score
     # Apply the scoring function to create the 'scores' column
     df['scores'] = df.apply(apply_scoring, axis=1)
+    print("YAHAN DEKH\n", df.head())
     # Choose the columns you want to store in a list
     columns_to_store = ['ORIG_CD', 'DEST_CD']
     # Create a list of tuples, where each tuple contains the elements from the selected columns
@@ -74,7 +78,7 @@ def graph_builder(FlightSchedule,scoring_list,j):
     for i, row in df.iterrows():
         G.add_node(row['ORIG_CD'])
         G.add_node(row['DEST_CD'])
-        G.add_edge(row['ORIG_CD'], row['DEST_CD'], weight=row['scores'])
+        G.add_edge(row['ORIG_CD'], row['DEST_CD'], weight=row['scores'], FirstClass = row['FC_AvailableInventory'], BusinessClass=row['BC_AvailableInventory'], PremiumEconomyClass =row['PC_AvailableInventory'] ,EconomyClass =row['EC_AvailableInventory']  )
     def apply_scoring(time):
         if time is not pd.NaT:
             if pd.to_timedelta(time).total_seconds() / 3600 <= 6:
@@ -90,10 +94,10 @@ def graph_builder(FlightSchedule,scoring_list,j):
             return score
         else:
             return 0
-    print("YAHAN DEKHO", canc_start, canc_dep)
+    #print("YAHAN DEKHO", canc_start, canc_dep)
     for i in range(1,len(flat_elements_list)):                    
             if (flat_elements_list[i][:3] == flat_elements_list[i-1][:3]) and (flat_elements_list[i][:3] != canc_start[:3]) and (flat_elements_list[i][:3] != canc_dep[:3]):
-                G.add_edge(flat_elements_list[i-1], flat_elements_list[i], weight=0)
+                G.add_edge(flat_elements_list[i-1], flat_elements_list[i], weight = 0)
 
                 # if flat_elements_list[i] in df['ORIG_CD'].values and flat_elements_list[i-1] in df['ORIG_CD'].values:
                 #     departure_delay = abs(df.loc[df['ORIG_CD'] == flat_elements_list[i], 'departure_delay'].iloc[0] - df.loc[df['ORIG_CD'] == flat_elements_list[i-1], 'departure_delay'].iloc[0])
@@ -111,7 +115,7 @@ def graph_builder(FlightSchedule,scoring_list,j):
     print(flat_elements_list)
     for i in range(len(flat_elements_list)):
         if (flat_elements_list[i][:3] == canc_start[:3]) and (flat_elements_list[i] != canc_start):
-            print("BROO",flat_elements_list[i])
+           # print("BROO",flat_elements_list[i])
             #print(canc_start, flat_elements_list[i])
             #print(df.loc[df['DEST_CD'] == flat_elements_list[i], 'departure_delay'])
             if (len(df.loc[df['ORIG_CD'] == flat_elements_list[i], 'departure_delay'])==0):
@@ -125,7 +129,8 @@ def graph_builder(FlightSchedule,scoring_list,j):
             arrival_delay = abs(df.loc[df['DEST_CD'] == canc_dep, 'arrival_delay'].iloc[0] - df.loc[df['DEST_CD'] == flat_elements_list[i], 'arrival_delay'].iloc[0])
             weight = apply_scoring(arrival_delay)
             G.add_edge(flat_elements_list[i],canc_dep, weight=weight)
-    
+    print("HI")
+    print(G.edges(data=True))
                # Plot the graph
     plt.figure(figsize=(10, 10))
     pos = nx.random_layout(G)  # You can use other layout algorithms as well
@@ -136,5 +141,13 @@ def graph_builder(FlightSchedule,scoring_list,j):
     #plt.figsi
     #print(df)
     # ze(100,100)
-    
-    return G
+    l = list(df['ORIG_CD'])
+    l2 = list(df['DEST_CD'])
+    print("pehle ",len(G.edges))
+    #print(l)
+    for j in cancelled_list:
+        j = int(j)
+        j-=2
+        G.remove_edge(l[j], l2[j])
+    print("ab ",len(G.edges))
+    return G,l,l2

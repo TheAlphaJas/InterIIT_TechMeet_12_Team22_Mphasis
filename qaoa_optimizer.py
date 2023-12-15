@@ -3,7 +3,7 @@ from pennylane import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 import qiskit
-
+import streamlit as st
 #Some Imp graph functions
 def find_shortest_path(graph, start, end):
 	shortest_path = nx.shortest_path(graph, source=start, target=end, weight='weight')
@@ -69,7 +69,9 @@ def remove_unconnected_components(G):
 
   for u, v, data in G.edges(data=True):
     if u in largest_component and v in largest_component:
-      H.add_edge(u, v, weight=data["weight"])
+      H.add_edge(u,v)
+      for k,v1 in data.items():
+          H[u][v][k] = v1
 
   return H
 
@@ -94,12 +96,14 @@ def remove_edges_by_indices(G, indices):
   G_copy.remove_edges_from(edges_to_remove)
   #print(G_copy.edges)
   # Update the graph with weights after removing edges
+  
   for edge in G_copy.edges():
     # Get the weight of the edge from the original graph
     d = G.get_edge_data(edge[0],edge[1])
-    weight = d["weight"]
+    for k,v in d.items():
+          G_copy[edge[0]][edge[1]][k] = v
     # Add the weight back to the copied graph
-    G_copy.edges[edge[0], edge[1]]["weight"] = weight
+    #G_copy.edges[edge[0], edge[1]]["weight"] = weight
 
   return G_copy
 def solve2(edges, s, d, n):
@@ -227,7 +231,7 @@ def find_indices_greater_than_0_5(array):
   # Loop through each element in the array
   for i, element in enumerate(array):
     # Check if the element is greater than 0.5
-    if element > 0.5:
+    if element >= 0.4:
       # Add the index to the list
       indices.append(i)
 
@@ -276,7 +280,7 @@ def suboptimizer(G,nodes,source,dest,opt,steps,depth,params):
             qnode = qml.QNode(objective_to_understand, globals()['dev'])
             results1 = cost2(params[0],params[1],depth,globals()['c_k'],globals()['c_ij'],qnode)
             qnode = qml.QNode(objective, globals()['dev'])
-            if (np.max(results1)>0.5):
+            if (np.max(results1)>=0.4):
                 print("Removing edge!")
                 return (params,results1,1,G)
             elif (np.max(results1)<=-0.75):
@@ -286,13 +290,14 @@ def suboptimizer(G,nodes,source,dest,opt,steps,depth,params):
             print("Objective after step",i+1,"=",globals()['objective_list'][-1])
             print("Cost at step",i+1,"=",coste)
             globals()['params'] = params
+    st.pyplot(draw_graph(G))
     return (params,results1,0,G)
 globals()['M'] = 65
 G_final = nx.DiGraph()
 def optimize_now(G,nodes,source,dest):
     np.random.seed(69)
     globals()['opt'] = qml.AdamOptimizer(stepsize = 1e-3)
-    globals()['steps'] = 600
+    globals()['steps'] = 500
     globals()['depth'] = 25
     globals()['params'] = np.random.random((2,globals()['depth']),requires_grad = True)
     globals()['params'] , results, y1, G = suboptimizer(G,nodes,source,dest,globals()['opt'],globals()['steps'],globals()['depth'],globals()['params'])
