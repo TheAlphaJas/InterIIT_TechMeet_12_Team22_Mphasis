@@ -2,7 +2,6 @@ import pennylane as qml
 from pennylane import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-import qiskit
 import streamlit as st
 #Some Imp graph functions
 def find_shortest_path(graph, start, end):
