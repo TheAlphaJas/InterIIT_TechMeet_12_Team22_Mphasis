@@ -129,7 +129,10 @@ def bbx(Graph,source,dest,listofpnr,MCT,updownmap):
        lode = []
        while(rem>0):
         path = timed_optimizer(G_mod,len(G_mod.nodes),source,dest)
-        if (check_graph_properties(path,source,dest)):
+        print(mapping)
+        print("REM ",rem )
+        print(path.edges(data=True))
+        if (not check_graph_properties(path,source,dest)):
            break
         G_mod,listofpnr,rem,listofdeletededges = allocate(G_mod,path,mapping1,listofpnr,mapping1[source][:3],mapping1[dest][:3],updownmap,cabin,True,MCT,rem)
         lode.extend(listofdeletededges)
@@ -137,4 +140,5 @@ def bbx(Graph,source,dest,listofpnr,MCT,updownmap):
          G_mod.add_edge(u,v)
          for n,m in a.items():
             G_mod[u][v][n] = m
+    print("final REM ",rem)
     return listofpnr

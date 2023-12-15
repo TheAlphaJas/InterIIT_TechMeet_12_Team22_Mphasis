@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 # Read the dataset
 def graph_builder(FlightSchedule,scoring_list,j,cancelled_list):
-    new_df = FlightSchedule.copy()
+    df = FlightSchedule.copy()
     # new_df2 = new_df.drop('DepartureDates',axis=1)
 
     # final_df = pd.DataFrame()
@@ -28,15 +28,13 @@ def graph_builder(FlightSchedule,scoring_list,j,cancelled_list):
     #         new_df3.at[i,'ArvTime']  = pd.to_datetime(new_df3.iloc[i]['DepartureDates']+' '+new_df3.iloc[i]['ArrivalTime']) + pd.Timedelta(days=1)
     #     else:
     #         new_df3.at[i,'ArvTime']  = pd.to_datetime(new_df3.iloc[i]['DepartureDates']+' '+new_df3.iloc[i]['ArrivalTime'])
-    print(len(new_df))
-    for r in range(len(new_df)):
+    print(len(df))
+    for r in range(len(df)):
         try:
-            new_df.at[r,'ArrivalAirport'] = new_df.iloc[r]['ArrivalAirport'].strip()
-            new_df.at[r,'DepartureAirport'] = new_df.iloc[r]['DepartureAirport'].strip()
+            df.at[r,'ArrivalAirport'] = df.iloc[r]['ArrivalAirport'].strip()
+            df.at[r,'DepartureAirport'] = df.iloc[r]['DepartureAirport'].strip()
         except:
-            print("KATA ",new_df.iloc[r]['ArrivalAirport'])
-    
-    df = new_df
+            print("KATA ",df.iloc[r]['ArrivalAirport'])
     for i in range(len(df)):
         if df.iloc[i]['ArrivalAirport'] != df.iloc[j]['ArrivalAirport']:
             df.at[i,'ArrivalDateTime'] = pd.to_datetime(df.at[i,'ArrivalDateTime']) + pd.Timedelta(hours=scoring_list[-1])
@@ -58,6 +56,7 @@ def graph_builder(FlightSchedule,scoring_list,j,cancelled_list):
     # Calculate the time difference between row 36 and each respective row
     df['departure_delay'] = df['DEP_DTML'] - df.loc[j, 'DEP_DTML']
     df['arrival_delay'] = df['ARR_DTML'] - df.loc[j, 'ARR_DTML']
+    new_df = df.copy()
     df = df[abs(df['departure_delay']) <= pd.Timedelta(hours=(scoring_list[9]))]
     
     # Define a function to apply scoring rules
@@ -141,13 +140,17 @@ def graph_builder(FlightSchedule,scoring_list,j,cancelled_list):
     #plt.figsi
     #print(df)
     # ze(100,100)
-    l = list(df['ORIG_CD'])
-    l2 = list(df['DEST_CD'])
+    l = list(new_df['ORIG_CD'])
+    l2 = list(new_df['DEST_CD'])
+    l3 = list(new_df['departure_delay'])
     print("pehle ",len(G.edges))
+    print(len(df))
     #print(l)
     for j in cancelled_list:
         j = int(j)
         j-=2
-        G.remove_edge(l[j], l2[j])
+        print(j)
+        if abs(l3[j]) <= pd.Timedelta(hours=(scoring_list[9])):
+            G.remove_edge(l[j], l2[j])
     print("ab ",len(G.edges))
     return G,l,l2

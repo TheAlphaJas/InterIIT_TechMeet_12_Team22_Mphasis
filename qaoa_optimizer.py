@@ -27,7 +27,7 @@ def draw_graph(graph):
     pos = nx.spring_layout(graph)
     nx.draw(graph, pos, with_labels=True, font_weight='bold', node_size=700, node_color='skyblue', font_color='black', font_size=8, edge_color='gray')
     nx.draw_networkx_edge_labels(graph, pos, edge_labels={(u, v): graph[u][v]['weight'] for u, v in graph.edges()})
-    plt.show()
+    # plt.show()
     return None
 
 def graph_from_list(input_list):
@@ -289,7 +289,7 @@ def suboptimizer(G,nodes,source,dest,opt,steps,depth,params):
             print("Objective after step",i+1,"=",globals()['objective_list'][-1])
             print("Cost at step",i+1,"=",coste)
             globals()['params'] = params
-    st.pyplot(draw_graph(G))
+    # st.pyplot(draw_graph(G))
     return (params,results1,0,G)
 globals()['M'] = 65
 G_final = nx.DiGraph()

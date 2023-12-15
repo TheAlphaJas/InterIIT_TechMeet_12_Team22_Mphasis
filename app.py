@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import networkx as nx
+import csv
 from io import StringIO
 from graph_builder import graph_builder
 from bbx import bbx
@@ -183,6 +184,7 @@ with st.form("my_form"):
         # G.add_edge(1,0,weight=4)
         # G.add_edge(1,4,weight=4)
                 cancelled_flights = cancelled_flights.split(",")
+                listofpnr = []
                 for i in cancelled_flights:
                     i = int(i)-2
                     G,sourcelist,destlist=graph_builder(FlightSchedule,scoring_list,i,cancelled_flights)
@@ -194,8 +196,17 @@ with st.form("my_form"):
         #print("EDGES ",G.edges(data=True))
         #draw_graph(G)
                     updownmap = {'FirstClass':['FirstClass'],'BusinessClass':['BusinessClass'],'EconomyClass':['EconomyClass'],'PremiumEconomyClass':['PremiumEconomyClass']}
-                    listofpnr = bbx(G,sourcelist[i],destlist[i],lpr,int(whatisthis),updownmap)
-                    print(listofpnr)
+                    listofpnr.extend(bbx(G,sourcelist[i],destlist[i],lpr,int(whatisthis),updownmap))
+                    # print(listofpnr)
+                selected_keys = ['pnr_no', 'proposed']
+                # Convert data to CSV format
+                csv_data = StringIO()
+                csv_writer = csv.DictWriter(csv_data, fieldnames=selected_keys)
+                csv_writer.writeheader()
+                csv_writer.writerows([{key: item.get(key, ['No alternate flight found']) for key in selected_keys} for item in listofpnr])
+
+                result_df = pd.DataFrame([{key: item.get(key, ['No alternate flight found']) for key in selected_keys} for item in listofpnr])
+                print(result_df)
         #print(G.edges(data=True))
         #print(G)
                 #st.pyplot(draw_graph(G))
